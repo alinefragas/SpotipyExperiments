@@ -1,8 +1,11 @@
-###########################################################
-#                                                         #
-#  Always run initialize.py before using these functions  #
-#                                                         #
-###########################################################
+# import libraries
+from initialize import *
+import random
+
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
+sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 # ORGANIZE TS TRACKS OF A GIVEN ARTIST 
 
@@ -18,9 +21,10 @@
 # 8: valence - 0.0 to 1.0 describing the musical positiveness conveyed by a track (FLOAT)
 
 def OrganizeTracks(wantedArtist): # input the artist name as a string
+    print('organizing tracks ...')
     
     tracks= []
-    for i in range(0,1000,50):
+    for i in range(0,500,50):
         allTracks = sp.search(q= wantedArtist, type='track', limit=50,offset=i)
         for i, t in enumerate(allTracks['tracks']['items']):
 
@@ -30,7 +34,7 @@ def OrganizeTracks(wantedArtist): # input the artist name as a string
 
             tracks.append([trackID, trackName, trackFeatures[0]['speechiness'], trackFeatures[0]['liveness']>0.9, trackFeatures[0]['acousticness']>0.9, trackFeatures[0]['instrumentalness']>0.9, trackFeatures[0]['danceability'], trackFeatures[0]['energy'], trackFeatures[0]['valence']])
 
-    print(len(tracks + ' tracks saved from ' + wantedArtist + ' ...'))
+    print(str(len(tracks)) + ' tracks saved ...')
     return tracks # list of tracks
 
 
@@ -56,31 +60,31 @@ def FindSimilar(refName, refArtist, trackList):
         if trackList[i][3:5]==wantedTrack[3:5]:
             filteredTrackList.append(trackList[i])
 
-    print(' This track is ' + 'live' if wantedTrack[3] else 'not live' + ' and ' + 'acoustic' if wantedTrack[4] else 'not acoustic' + ' and ' + 'instrumental' if wantedTrack[5] else 'not instrumental' + ' ...' )
-    print(len(filteredTrackList) + ' tracks left to search ...')
+    print(' This track is ' + ('live' if wantedTrack[3] else 'not live') + ' and ' + ('acoustic' if wantedTrack[4] else 'not acoustic') + ' and ' + ('instrumental' if wantedTrack[5] else 'not instrumental') + ' ...' )
+    print(str(len(filteredTrackList)) + ' tracks left to search ...')
 
     # SPEECH FILTER
     # 2: speechiness - <0.33: music, 0.33-0.66: music and speech, >0.66: speech
     filt=[]
     if wantedTrack[2] > 0.66:                                           # if speech, only keep speech
+        print('Hmm this track sounds like a speech')
         for i in range(len(trackList)):
             if trackList[i][2] > 0.66:
                 filt.append(trackList[i])
     elif wantedTrack[2] < 0.33:                                         # if music, only keep music
+        print('Oh! This sounds like music')
         for i in range(len(trackList)):
             if trackList[i][2] < 0.33:
                 filt.append(trackList[i])
     else:                                                               # if music and speech, keep music and speech
+        print('Interesting, this track is music with speech... Is it rap?')
         for i in range(len(trackList)):
             if trackList[i][2] > 0.33 and trackList[i][2] < 0.66:
                 filt.append(trackList[i])
     
     filteredTrackList= filt
 
-    print('Hmm this track sounds like a speech' if wantedTrack[2] > 0.66)
-    print('Oh! This sounds like music' if wantedTrack[2] < 0.33)
-    print('Interesting, this track is music with speech... Is it rap?' if wantedTrack[2] > 0.33 and wantedTrack[2] < 0.66)
-    print(len(filteredTrackList) + ' tracks left to search ...')
+    print(str(len(filteredTrackList)) + ' tracks left to search ...')
 
     # DANCEABILITY, ENERGY, VALENCE FILTER
     # 6: danceability - 0.0 is least danceable and 1.0 is most danceable
@@ -95,16 +99,17 @@ def FindSimilar(refName, refArtist, trackList):
 
     if len(match) > 0:
         result = random.choice(match)
-        print('Look! An exact match! You should listen to ' + result[i][1] + ' by ' + refArtist + ' :)')
+        print('Look! An exact match! You should listen to ' + result[1] + ' by ' + refArtist + ' :)')
     
     # look for a close match using minimum square distance
     else:
         result = filteredTrackList[0]
-        msd = (track0[6]-wantedTrack[6])**2 + (track0[7]-wantedTrack[7])**2 + (track0[8]-wantedTrack[8])**2
+        msd = (result[6]-wantedTrack[6])**2 + (result[7]-wantedTrack[7])**2 + (result[8]-wantedTrack[8])**2
+
         for i in range(len(filteredTrackList)):
             square_distance = (filteredTrackList[i][6]-wantedTrack[6])**2 + (filteredTrackList[i][7]-wantedTrack[7])**2 + (filteredTrackList[i][8]-wantedTrack[8])**2
             if square_distance < msd:
                 msd = square_distance
                 result = filteredTrackList[i]
         
-        print('I found something you may like: ' + result[1] + ' by ' + refArtist + ' :)')
+        print('I found something you may like: ' + result[1] + ' :)')
