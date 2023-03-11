@@ -32,7 +32,7 @@ def OrganizeTracks(wantedArtist): # input the artist name as a string
             trackID= t['id']
             trackFeatures= sp.audio_features(trackID)
 
-            tracks.append([trackID, trackName, trackFeatures[0]['speechiness'], trackFeatures[0]['liveness']>0.9, trackFeatures[0]['acousticness']>0.9, trackFeatures[0]['instrumentalness']>0.9, trackFeatures[0]['danceability'], trackFeatures[0]['energy'], trackFeatures[0]['valence']])
+            tracks.append([trackID, trackName, trackFeatures[0]['speechiness'], trackFeatures[0]['liveness']>0.75, trackFeatures[0]['acousticness']>0.75, trackFeatures[0]['instrumentalness']>0.75, trackFeatures[0]['danceability'], trackFeatures[0]['energy'], trackFeatures[0]['valence']])
 
     print(str(len(tracks)) + ' tracks saved ...')
     return tracks # list of tracks
@@ -68,19 +68,19 @@ def FindSimilar(refName, refArtist, trackList):
     filt=[]
     if wantedTrack[2] > 0.66:                                           # if speech, only keep speech
         print('Hmm this track sounds like a speech')
-        for i in range(len(trackList)):
-            if trackList[i][2] > 0.66:
-                filt.append(trackList[i])
+        for i in range(len(filteredTrackList)):
+            if filteredTrackList[i][2] > 0.66:
+                filt.append(filteredTrackList[i])
     elif wantedTrack[2] < 0.33:                                         # if music, only keep music
         print('Oh! This sounds like music')
-        for i in range(len(trackList)):
-            if trackList[i][2] < 0.33:
-                filt.append(trackList[i])
+        for i in range(len(filteredTrackList)):
+            if filteredTrackList[i][2] < 0.33:
+                filt.append(filteredTrackList[i])
     else:                                                               # if music and speech, keep music and speech
         print('Interesting, this track is music with speech... Is it rap?')
-        for i in range(len(trackList)):
-            if trackList[i][2] > 0.33 and trackList[i][2] < 0.66:
-                filt.append(trackList[i])
+        for i in range(len(filteredTrackList)):
+            if filteredTrackList[i][2] > 0.33 and filteredTrackList[i][2] < 0.66:
+                filt.append(filteredTrackList[i])
     
     filteredTrackList= filt
 
@@ -113,3 +113,4 @@ def FindSimilar(refName, refArtist, trackList):
                 result = filteredTrackList[i]
         
         print('I found something you may like: ' + result[1] + ' :)')
+        print(result)
